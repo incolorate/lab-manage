@@ -16,21 +16,7 @@ import CascadeSelect from "primevue/cascadeselect";
         </template>
 
         <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">You're logged in!</div>
-                    <Button label="Verify" />
-                </div>
-                <CascadeSelect
-                    v-model="selectedCity"
-                    :options="countries"
-                    optionLabel="cname"
-                    optionGroupLabel="name"
-                    :optionGroupChildren="['states', 'cities']"
-                    class="w-56"
-                    placeholder="Select a City"
-                />
-            </div>
+            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8"></div>
         </div>
     </AuthenticatedLayout>
 </template>
