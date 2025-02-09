@@ -49,6 +49,7 @@ defineProps({
                 modal
                 header="Edit Profile"
                 :style="{ width: '25rem' }"
+                class="bg-white text-black"
             >
                 <form @submit.prevent="submit">
                     <label for="name">Name:</label>

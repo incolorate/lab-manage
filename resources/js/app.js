@@ -6,8 +6,8 @@ import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 import { createApp, h } from "vue";
 import { ZiggyVue } from "../../vendor/tightenco/ziggy";
 import PrimeVue from "primevue/config";
-import { MyPreset } from "./mytheme.js";
-
+import ToastService from "primevue/toastservice";
+import ConfirmationService from "primevue/confirmationservice";
 const appName = import.meta.env.VITE_APP_NAME || "Laravel";
 
 createInertiaApp({
@@ -22,11 +22,10 @@ createInertiaApp({
             .use(plugin)
             .use(ZiggyVue)
             .use(PrimeVue, {
-                theme: {
-                    preset: MyPreset,
-                    options: { dark: false },
-                },
+                theme: "none",
             })
+            .use(ToastService)
+            .use(ConfirmationService)
             .mount(el);
     },
     progress: {
