@@ -4,6 +4,10 @@
     @apply relative;
 }
 
+.p-datatable {
+    @apply bg-white;
+}
+
 .p-datatable-table {
     @apply border-spacing-0 w-full;
 }

@@ -45,6 +45,12 @@ function submit() {
     }
 }
 
+const deleteIngredient = (id) => {
+    router.delete(`/ingredients/${id}`, {
+        preserveScroll: true,
+    });
+};
+
 defineProps({
     ingredients: Object,
 });
@@ -103,7 +109,6 @@ defineProps({
         <div class="w-full bg-blue-200 flex justify-center">
             <div class="w-full max-w-xl">
                 <DataTable
-                    class="bg-white text-red-200"
                     :value="ingredients"
                     :totalRecords="ingredients.length"
                     tableStyle="max-width: 50rem"
@@ -130,6 +135,19 @@ defineProps({
                     </template>
                     <Column field="name" header="Name"> </Column>
                     <Column field="description" header="Description"> </Column>
+                    <Column>
+                        <p>X</p>
+
+                        <template #body="{ data }">
+                            <Button
+                                class="text-red-400"
+                                icon="pi  pi-times"
+                                @click="deleteIngredient(data.id)"
+                                severity="secondary"
+                                rounded
+                            ></Button>
+                        </template>
+                    </Column>
                 </DataTable>
             </div>
         </div>

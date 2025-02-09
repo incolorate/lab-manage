@@ -19,8 +19,8 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/ingredients', [IngredientController::class, 'index'])->name('ingredients.index');
-Route::post('/ingredients', [IngredientController::class, 'store'])->name('ingredients.store');
+Route::resource('ingredients', IngredientController::class);
+
 
 
 Route::middleware('auth')->group(function () {

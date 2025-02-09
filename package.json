@@ -8,8 +8,8 @@
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
         "@tailwindcss/forms": "^0.5.3",
-        "@vitejs/plugin-vue": "^5.0.0",
         "@tailwindcss/postcss": "^4.0.0",
+        "@vitejs/plugin-vue": "^5.0.0",
         "autoprefixer": "^10.4.12",
         "axios": "^1.7.4",
         "concurrently": "^9.0.1",
@@ -21,6 +21,7 @@
     "dependencies": {
         "@primevue/themes": "^4.2.5",
         "@tailwindcss/vite": "^4.0.5",
+        "primeicons": "^7.0.0",
         "primevue": "^4.2.5",
         "tailwindcss": "^4.0.5",
         "tailwindcss-primeui": "^0.4.0"
