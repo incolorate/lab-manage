@@ -12,19 +12,37 @@ import InputText from "primevue/inputtext";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import Dialog from "primevue/dialog";
+import FloatLabel from "primevue/floatlabel";
+import { useToast } from "primevue/usetoast";
 
 const showCreateIngredientModal = ref(false);
 const form = useForm({
     name: null,
     description: null,
 });
+const toast = useToast();
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 
 function submit() {
-    router.post("/ingredients", form);
+    try {
+        form.post("/ingredients", {
+            preserveScroll: true,
+            onSuccess: () => {
+                form.reset();
+                toast.add({
+                    severity: "success",
+                    summary: "Ingredient created",
+                    life: 3000,
+                });
+            },
+        });
+        showCreateIngredientModal.value = false;
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 defineProps({
@@ -47,28 +65,39 @@ defineProps({
             <Dialog
                 v-model:visible="showCreateIngredientModal"
                 modal
-                header="Edit Profile"
+                header="Create ingredient"
                 :style="{ width: '25rem' }"
                 class="bg-white text-black"
             >
-                <form @submit.prevent="submit">
-                    <label for="name">Name:</label>
-                    <input id="name" v-model="form.name" />
-                    <label for="description">Description:</label>
-                    <input id="description" v-model="form.description" />
-                    <Button type="submit">Submit</Button>
+                <form @submit.prevent="submit" class="flex flex-col gap-6">
+                    <FloatLabel class="mt-5">
+                        <InputText
+                            id="name"
+                            v-model="form.name"
+                            class="bg-white text-slate-950"
+                        />
+                        <label for="name" class="text-slate-600">Name</label>
+                    </FloatLabel>
+                    <FloatLabel>
+                        <InputText
+                            id="description"
+                            v-model="form.description"
+                            class="bg-white text-slate-950"
+                        />
+                        <label for="description" class="text-slate-600"
+                            >Description</label
+                        >
+                    </FloatLabel>
                 </form>
-                <Button
-                    type="button"
-                    label="Cancel"
-                    severity="secondary"
-                    @click="visible = false"
-                ></Button>
-                <Button
-                    type="button"
-                    label="Save"
-                    @click="visible = false"
-                ></Button>
+                <div class="flex gap-4 mt-2">
+                    <Button
+                        type="button"
+                        label="Cancel"
+                        severity="secondary"
+                        @click="showCreateIngredientModal = false"
+                    ></Button>
+                    <Button type="submit" label="Save" @click="submit"></Button>
+                </div>
             </Dialog>
         </div>
         <div class="w-full bg-blue-200 flex justify-center">

@@ -6,6 +6,7 @@ import DropdownLink from "@/Components/DropdownLink.vue";
 import NavLink from "@/Components/NavLink.vue";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink.vue";
 import { Link } from "@inertiajs/vue3";
+import Toast from "primevue/toast";
 
 const showingNavigationDropdown = ref(false);
 </script>
@@ -190,8 +191,11 @@ const showingNavigationDropdown = ref(false);
 
             <!-- Page Content -->
             <main>
-                <slot />
+                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <slot />
+                </div>
             </main>
         </div>
+        <Toast />
     </div>
 </template>
