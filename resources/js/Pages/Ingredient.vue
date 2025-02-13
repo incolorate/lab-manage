@@ -17,11 +17,20 @@ import { useToast } from "primevue/usetoast";
 import Select from "primevue/select";
 
 const showCreateIngredientModal = ref(false);
+const showCreateSupplierModal = ref(false);
 const form = useForm({
     name: null,
     description: null,
     supplier_id: null,
 });
+
+const supplierForm = useForm({
+    name: "",
+    contact_person: "",
+    phone_number: "",
+    return_to: "ingredients.index",
+});
+
 const toast = useToast();
 
 const filters = ref({
@@ -42,6 +51,25 @@ function submit() {
             },
         });
         showCreateIngredientModal.value = false;
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+function submitSupplier() {
+    try {
+        supplierForm.post("/suppliers", {
+            preserveScroll: true,
+            onSuccess: () => {
+                form.reset();
+                toast.add({
+                    severity: "success",
+                    summary: "Supplier created",
+                    life: 3000,
+                });
+                showCreateSupplierModal.value = false;
+            },
+        });
     } catch (error) {
         console.log(error);
     }
@@ -119,12 +147,13 @@ defineProps({
                         <template #footer>
                             <div class="p-3">
                                 <Button
-                                    label="Add New"
+                                    label="Create a new supplier"
                                     fluid
                                     severity="secondary"
                                     text
                                     size="small"
                                     icon="pi pi-plus"
+                                    @click="showCreateSupplierModal = true"
                                 />
                             </div>
                         </template>
@@ -188,5 +217,85 @@ defineProps({
                 <p v-else>No items detected</p>
             </div>
         </div>
+
+        <Dialog
+            v-model:visible="showCreateSupplierModal"
+            modal
+            header="Create ingredient"
+            :style="{ width: '25rem' }"
+            class="bg-white text-black"
+        >
+            <form @submit.prevent="submitSupplier" class="flex flex-col gap-6">
+                <FloatLabel class="mt-5">
+                    <InputText
+                        id="name"
+                        v-model="supplierForm.name"
+                        class="bg-white text-slate-950"
+                        :class="{ 'p-invalid': supplierForm.errors.name }"
+                    />
+                    <label for="name" class="text-slate-600">Name</label>
+                    <small class="text-red-500" v-if="supplierForm.errors.name">
+                        {{ supplierForm.errors.name }}
+                    </small>
+                </FloatLabel>
+
+                <FloatLabel>
+                    <InputText
+                        id="contact_person"
+                        v-model="supplierForm.contact_person"
+                        class="bg-white text-slate-950"
+                        :class="{
+                            'p-invalid': supplierForm.errors.contact_person,
+                        }"
+                    />
+                    <label for="contact_person" class="text-slate-600"
+                        >Contact Person</label
+                    >
+                    <small
+                        class="text-red-500"
+                        v-if="supplierForm.errors.contact_person"
+                    >
+                        {{ supplierForm.errors.contact_person }}
+                    </small>
+                </FloatLabel>
+
+                <FloatLabel>
+                    <InputText
+                        id="phone_number"
+                        v-model="supplierForm.phone_number"
+                        class="bg-white text-slate-950"
+                        :class="{
+                            'p-invalid': supplierForm.errors.phone_number,
+                        }"
+                    />
+                    <label for="phone_number" class="text-slate-600"
+                        >Phone Number</label
+                    >
+                    <small
+                        class="text-red-500"
+                        v-if="supplierForm.errors.phone_number"
+                    >
+                        {{ supplierForm.errors.phone_number }}
+                    </small>
+                </FloatLabel>
+            </form>
+
+            <template #footer>
+                <div class="flex gap-4">
+                    <Button
+                        type="button"
+                        label="Cancel"
+                        severity="secondary"
+                        @click="showCreditModal = false"
+                    />
+                    <Button
+                        type="submit"
+                        label="Save"
+                        :loading="form.processing"
+                        @click="submitSupplier"
+                    />
+                </div>
+            </template>
+        </Dialog>
     </AuthenticatedLayout>
 </template>
