@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Ingredient;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Supplier;
 
 class IngredientController extends Controller
 {
@@ -16,7 +17,8 @@ class IngredientController extends Controller
 
     
         return Inertia::render('Ingredient', [
-            'ingredients' => Ingredient::all()
+            'ingredients' => Ingredient::with('supplier')->get(),
+            'suppliers' => Supplier::all()
         ]);
     }
 
@@ -35,7 +37,8 @@ class IngredientController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:500'
+            'description' => 'nullable|string|max:500',
+            'supplier_id' => 'nullable|exists:suppliers,id'
         ]);
 
         Ingredient::create($validated);

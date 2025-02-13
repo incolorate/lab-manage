@@ -14,4 +14,9 @@ class Ingredient extends Model
         return $this->belongsToMany(Recipe::class)
             ->withPivot('concentration');
     }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
 }

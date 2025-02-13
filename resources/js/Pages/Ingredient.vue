@@ -14,11 +14,13 @@ import InputIcon from "primevue/inputicon";
 import Dialog from "primevue/dialog";
 import FloatLabel from "primevue/floatlabel";
 import { useToast } from "primevue/usetoast";
+import Select from "primevue/select";
 
 const showCreateIngredientModal = ref(false);
 const form = useForm({
     name: null,
     description: null,
+    supplier_id: null,
 });
 const toast = useToast();
 
@@ -53,6 +55,7 @@ const deleteIngredient = (id) => {
 
 defineProps({
     ingredients: Object,
+    suppliers: Object,
 });
 </script>
 
@@ -94,6 +97,38 @@ defineProps({
                             >Description</label
                         >
                     </FloatLabel>
+                    <Select
+                        v-model="form.supplier_id"
+                        :options="suppliers"
+                        filter
+                        optionLabel="name"
+                        placeholder="Select a supplier"
+                        class="w-full md:w-56"
+                    >
+                        <template #option="slotProps">
+                            <div class="flex items-center">
+                                <img
+                                    :alt="slotProps.option.label"
+                                    src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png"
+                                    :class="`mr-2 flag flag-${slotProps.option.code.toLowerCase()}`"
+                                    style="width: 18px"
+                                />
+                                <div>{{ slotProps.option.name }}</div>
+                            </div>
+                        </template>
+                        <template #footer>
+                            <div class="p-3">
+                                <Button
+                                    label="Add New"
+                                    fluid
+                                    severity="secondary"
+                                    text
+                                    size="small"
+                                    icon="pi pi-plus"
+                                />
+                            </div>
+                        </template>
+                    </Select>
                 </form>
                 <div class="flex gap-4 mt-2">
                     <Button
@@ -109,6 +144,7 @@ defineProps({
         <div class="w-full bg-blue-200 flex justify-center">
             <div class="w-full max-w-xl">
                 <DataTable
+                    v-if="ingredients.length > 0"
                     :value="ingredients"
                     :totalRecords="ingredients.length"
                     tableStyle="max-width: 50rem"
@@ -149,6 +185,7 @@ defineProps({
                         </template>
                     </Column>
                 </DataTable>
+                <p v-else>No items detected</p>
             </div>
         </div>
     </AuthenticatedLayout>
