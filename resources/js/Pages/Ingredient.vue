@@ -12,7 +12,6 @@ import InputText from "primevue/inputtext";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import Dialog from "primevue/dialog";
-import FloatLabel from "primevue/floatlabel";
 import { useToast } from "primevue/usetoast";
 import Select from "primevue/select";
 
@@ -48,9 +47,9 @@ function submit() {
                     summary: "Ingredient created",
                     life: 3000,
                 });
+                showCreateIngredientModal.value = false;
             },
         });
-        showCreateIngredientModal.value = false;
     } catch (error) {
         console.log(error);
     }
@@ -99,6 +98,7 @@ defineProps({
             <Button type="submit" @click="showCreateIngredientModal = true"
                 >Add ingredient</Button
             >
+
             <Dialog
                 v-model:visible="showCreateIngredientModal"
                 modal
@@ -106,58 +106,64 @@ defineProps({
                 :style="{ width: '25rem' }"
                 class="bg-white text-black"
             >
-                <form @submit.prevent="submit" class="flex flex-col gap-6">
-                    <FloatLabel class="mt-5">
+                <form @submit.prevent="submit" class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-1">
                         <InputText
                             id="name"
+                            placeholder="Name"
                             v-model="form.name"
                             class="bg-white text-slate-950"
                         />
-                        <label for="name" class="text-slate-600">Name</label>
-                    </FloatLabel>
-                    <FloatLabel>
+                        <small class="text-red-500" v-if="form.errors.name">
+                            {{ form.errors.name }}
+                        </small>
+                    </div>
+                    <div class="flex flex-col gap-1">
                         <InputText
                             id="description"
+                            placeholder="Description"
                             v-model="form.description"
                             class="bg-white text-slate-950"
                         />
-                        <label for="description" class="text-slate-600"
-                            >Description</label
+
+                        <small
+                            class="text-red-500"
+                            v-if="form.errors.description"
                         >
-                    </FloatLabel>
-                    <Select
-                        v-model="form.supplier_id"
-                        :options="suppliers"
-                        filter
-                        optionLabel="name"
-                        placeholder="Select a supplier"
-                        class="w-full md:w-56"
-                    >
-                        <template #option="slotProps">
-                            <div class="flex items-center">
-                                <img
-                                    :alt="slotProps.option.label"
-                                    src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png"
-                                    :class="`mr-2 flag flag-${slotProps.option.code.toLowerCase()}`"
-                                    style="width: 18px"
-                                />
+                            {{ form.errors.description }}
+                        </small>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <Select
+                            v-model="form.supplier_id"
+                            :options="suppliers"
+                            filter
+                            optionLabel="name"
+                            optionValue="id"
+                            placeholder="Select a supplier"
+                            class="w-full md:w-56"
+                        >
+                            <template #option="slotProps">
                                 <div>{{ slotProps.option.name }}</div>
-                            </div>
-                        </template>
-                        <template #footer>
-                            <div class="p-3">
-                                <Button
-                                    label="Create a new supplier"
-                                    fluid
-                                    severity="secondary"
-                                    text
-                                    size="small"
-                                    icon="pi pi-plus"
-                                    @click="showCreateSupplierModal = true"
-                                />
-                            </div>
-                        </template>
-                    </Select>
+                            </template>
+                            <template #footer>
+                                <div class="p-3">
+                                    <Button
+                                        label="Create a new supplier"
+                                        fluid
+                                        severity="secondary"
+                                        text
+                                        size="small"
+                                        icon="pi pi-plus"
+                                        @click="showCreateSupplierModal = true"
+                                    />
+                                </div>
+                            </template>
+                        </Select>
+                        <small class="text-red-500" v-if="form.errors.supplier">
+                            {{ form.errors.supplier }}
+                        </small>
+                    </div>
                 </form>
                 <div class="flex gap-4 mt-2">
                     <Button
@@ -200,6 +206,8 @@ defineProps({
                     </template>
                     <Column field="name" header="Name"> </Column>
                     <Column field="description" header="Description"> </Column>
+                    <Column field="supplier.name" header="Supplier"> </Column>
+
                     <Column>
                         <p>X</p>
 
@@ -221,63 +229,54 @@ defineProps({
         <Dialog
             v-model:visible="showCreateSupplierModal"
             modal
-            header="Create ingredient"
+            header="Create supplier"
             :style="{ width: '25rem' }"
             class="bg-white text-black"
         >
             <form @submit.prevent="submitSupplier" class="flex flex-col gap-6">
-                <FloatLabel class="mt-5">
-                    <InputText
-                        id="name"
-                        v-model="supplierForm.name"
-                        class="bg-white text-slate-950"
-                        :class="{ 'p-invalid': supplierForm.errors.name }"
-                    />
-                    <label for="name" class="text-slate-600">Name</label>
-                    <small class="text-red-500" v-if="supplierForm.errors.name">
-                        {{ supplierForm.errors.name }}
-                    </small>
-                </FloatLabel>
+                <InputText
+                    id="name"
+                    placeholder="Name"
+                    v-model="supplierForm.name"
+                    class="bg-white text-slate-950"
+                    :class="{ 'p-invalid': supplierForm.errors.name }"
+                />
+                <small class="text-red-500" v-if="supplierForm.errors.name">
+                    {{ supplierForm.errors.name }}
+                </small>
 
-                <FloatLabel>
-                    <InputText
-                        id="contact_person"
-                        v-model="supplierForm.contact_person"
-                        class="bg-white text-slate-950"
-                        :class="{
-                            'p-invalid': supplierForm.errors.contact_person,
-                        }"
-                    />
-                    <label for="contact_person" class="text-slate-600"
-                        >Contact Person</label
-                    >
-                    <small
-                        class="text-red-500"
-                        v-if="supplierForm.errors.contact_person"
-                    >
-                        {{ supplierForm.errors.contact_person }}
-                    </small>
-                </FloatLabel>
+                <InputText
+                    id="contact_person"
+                    placeholder="Contact person"
+                    v-model="supplierForm.contact_person"
+                    class="bg-white text-slate-950"
+                    :class="{
+                        'p-invalid': supplierForm.errors.contact_person,
+                    }"
+                />
+                <small
+                    class="text-red-500"
+                    v-if="supplierForm.errors.contact_person"
+                >
+                    {{ supplierForm.errors.contact_person }}
+                </small>
 
-                <FloatLabel>
-                    <InputText
-                        id="phone_number"
-                        v-model="supplierForm.phone_number"
-                        class="bg-white text-slate-950"
-                        :class="{
-                            'p-invalid': supplierForm.errors.phone_number,
-                        }"
-                    />
-                    <label for="phone_number" class="text-slate-600"
-                        >Phone Number</label
-                    >
-                    <small
-                        class="text-red-500"
-                        v-if="supplierForm.errors.phone_number"
-                    >
-                        {{ supplierForm.errors.phone_number }}
-                    </small>
-                </FloatLabel>
+                <InputText
+                    id="phone_number"
+                    placeholder="Phone number"
+                    v-model="supplierForm.phone_number"
+                    class="bg-white text-slate-950"
+                    :class="{
+                        'p-invalid': supplierForm.errors.phone_number,
+                    }"
+                />
+
+                <small
+                    class="text-red-500"
+                    v-if="supplierForm.errors.phone_number"
+                >
+                    {{ supplierForm.errors.phone_number }}
+                </small>
             </form>
 
             <template #footer>
