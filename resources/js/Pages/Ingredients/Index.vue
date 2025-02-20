@@ -16,8 +16,16 @@ import { useToast } from "primevue/usetoast";
 import Select from "primevue/select";
 
 const showCreateIngredientModal = ref(false);
+const showEditIngredientModal = ref(false);
 const showCreateSupplierModal = ref(false);
 const form = useForm({
+    name: null,
+    description: null,
+    supplier_id: null,
+});
+
+const editForm = useForm({
+    id: null,
     name: null,
     description: null,
     supplier_id: null,
@@ -55,12 +63,39 @@ function submit() {
     }
 }
 
+function submitEdit() {
+    try {
+        editForm.put(`/ingredients/${editForm.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                editForm.reset();
+                toast.add({
+                    severity: "success",
+                    summary: "Ingredient updated",
+                    life: 3000,
+                });
+                showEditIngredientModal.value = false;
+            },
+        });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+function openEditModal(ingredient) {
+    editForm.id = ingredient.id;
+    editForm.name = ingredient.name;
+    editForm.description = ingredient.description;
+    editForm.supplier_id = ingredient.supplier_id;
+    showEditIngredientModal.value = true;
+}
+
 function submitSupplier() {
     try {
         supplierForm.post("/suppliers", {
             preserveScroll: true,
             onSuccess: () => {
-                form.reset();
+                supplierForm.reset();
                 toast.add({
                     severity: "success",
                     summary: "Supplier created",
@@ -99,6 +134,7 @@ defineProps({
                 >Add ingredient</Button
             >
 
+            <!-- Create Ingredient Modal -->
             <Dialog
                 v-model:visible="showCreateIngredientModal"
                 modal
@@ -174,6 +210,90 @@ defineProps({
                     <Button type="submit" label="Save" @click="submit"></Button>
                 </div>
             </Dialog>
+
+            <!-- Edit Ingredient Modal -->
+            <Dialog
+                v-model:visible="showEditIngredientModal"
+                modal
+                header="Edit ingredient"
+                :style="{ width: '25rem' }"
+            >
+                <form @submit.prevent="submitEdit" class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-1">
+                        <InputText
+                            id="edit-name"
+                            placeholder="Name"
+                            v-model="editForm.name"
+                            class="bg-white text-slate-950"
+                        />
+                        <small class="text-red-500" v-if="editForm.errors.name">
+                            {{ editForm.errors.name }}
+                        </small>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <InputText
+                            id="edit-description"
+                            placeholder="Description"
+                            v-model="editForm.description"
+                            class="bg-white text-slate-950"
+                        />
+
+                        <small
+                            class="text-red-500"
+                            v-if="editForm.errors.description"
+                        >
+                            {{ editForm.errors.description }}
+                        </small>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <Select
+                            v-model="editForm.supplier_id"
+                            :options="suppliers"
+                            filter
+                            optionLabel="name"
+                            optionValue="id"
+                            placeholder="Select a supplier"
+                            class="w-full md:w-56"
+                        >
+                            <template #option="slotProps">
+                                <div>{{ slotProps.option.name }}</div>
+                            </template>
+                            <template #footer>
+                                <div class="p-3">
+                                    <Button
+                                        label="Create a new supplier"
+                                        fluid
+                                        severity="secondary"
+                                        text
+                                        size="small"
+                                        icon="pi pi-plus"
+                                        @click="showCreateSupplierModal = true"
+                                    />
+                                </div>
+                            </template>
+                        </Select>
+                        <small
+                            class="text-red-500"
+                            v-if="editForm.errors.supplier"
+                        >
+                            {{ editForm.errors.supplier }}
+                        </small>
+                    </div>
+                </form>
+                <div class="flex gap-4 mt-2">
+                    <Button
+                        type="button"
+                        label="Cancel"
+                        severity="secondary"
+                        @click="showEditIngredientModal = false"
+                    ></Button>
+                    <Button
+                        type="submit"
+                        label="Update"
+                        @click="submitEdit"
+                    ></Button>
+                </div>
+            </Dialog>
         </div>
         <div class="w-full bg-blue-200 flex justify-center">
             <div class="w-full max-w-xl">
@@ -207,17 +327,22 @@ defineProps({
                     <Column field="description" header="Description"> </Column>
                     <Column field="supplier.name" header="Supplier"> </Column>
 
-                    <Column>
-                        <p>X</p>
-
+                    <Column header="Actions">
                         <template #body="{ data }">
-                            <Button
-                                class="text-red-400"
-                                icon="pi  pi-times"
-                                @click="deleteIngredient(data.id)"
-                                severity="secondary"
-                                rounded
-                            ></Button>
+                            <div class="flex gap-2">
+                                <Button
+                                    icon="pi pi-pencil"
+                                    @click="openEditModal(data)"
+                                    severity="info"
+                                    rounded
+                                ></Button>
+                                <Button
+                                    icon="pi pi-times"
+                                    @click="deleteIngredient(data.id)"
+                                    severity="danger"
+                                    rounded
+                                ></Button>
+                            </div>
                         </template>
                     </Column>
                 </DataTable>
@@ -284,12 +409,12 @@ defineProps({
                         type="button"
                         label="Cancel"
                         severity="secondary"
-                        @click="showCreditModal = false"
+                        @click="showCreateSupplierModal = false"
                     />
                     <Button
                         type="submit"
                         label="Save"
-                        :loading="form.processing"
+                        :loading="supplierForm.processing"
                         @click="submitSupplier"
                     />
                 </div>

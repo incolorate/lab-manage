@@ -12,11 +12,11 @@ class IngredientController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index()
     {
 
     
-        return Inertia::render('Ingredient', [
+        return Inertia::render('Ingredients/Index', [
             'ingredients' => Ingredient::with('supplier')->get(),
             'suppliers' => Supplier::all()
         ]);
