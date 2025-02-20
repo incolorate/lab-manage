@@ -9,6 +9,7 @@ import PrimeVue from "primevue/config";
 import ToastService from "primevue/toastservice";
 import ConfirmationService from "primevue/confirmationservice";
 const appName = import.meta.env.VITE_APP_NAME || "Laravel";
+import { MyPreset } from "./mytheme";
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -22,7 +23,12 @@ createInertiaApp({
             .use(plugin)
             .use(ZiggyVue)
             .use(PrimeVue, {
-                theme: "none",
+                theme: {
+                    preset: MyPreset,
+                    options: {
+                        darkModeSelector: false || "none",
+                    },
+                },
             })
             .use(ToastService)
             .use(ConfirmationService)

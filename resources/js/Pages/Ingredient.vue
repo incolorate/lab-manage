@@ -104,7 +104,6 @@ defineProps({
                 modal
                 header="Create ingredient"
                 :style="{ width: '25rem' }"
-                class="bg-white text-black"
             >
                 <form @submit.prevent="submit" class="flex flex-col gap-4">
                     <div class="flex flex-col gap-1">
