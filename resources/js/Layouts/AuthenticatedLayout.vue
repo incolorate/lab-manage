@@ -47,6 +47,12 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Ingredients
                                 </NavLink>
+                                <NavLink
+                                    :href="route('recipes.index')"
+                                    :active="route().current('recipes.index')"
+                                >
+                                    Recipes
+                                </NavLink>
                             </div>
                         </div>
 
