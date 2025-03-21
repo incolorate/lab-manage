@@ -20,10 +20,15 @@ class RecipeController extends Controller
             $query->with('supplier:id,name');
         }])->get();
         
+        $recipes->each(function($recipe) {
+            $recipe->price_per_100g = $recipe->calculatePriceFor100g();
+        });
+        
+
         // Get all ingredients for the ingredient selector
         $allIngredients = Ingredient::with('supplier:id,name')
-            ->select('id', 'name', 'description', 'supplier_id')
-            ->get();
+        ->select('id', 'name', 'description', 'supplier_id', 'price')
+        ->get();
             
         // Get suppliers for the quick add dropdown
         $suppliers = Supplier::select('id', 'name')->get();

@@ -17,6 +17,7 @@ import Dropdown from "primevue/dropdown";
 import Chip from "primevue/chip";
 import Toast from "primevue/toast";
 import ConfirmDialog from "primevue/confirmdialog";
+import Card from "primevue/card";
 
 // Props
 const props = defineProps({
@@ -70,6 +71,7 @@ const quickAddDialog = ref({
     name: "",
     description: "",
     supplier_id: null,
+    price: 0.0,
     concentration: 0.0,
     processing: false,
     errors: {},
@@ -87,6 +89,37 @@ const filteredIngredients = computed(() => {
                 ing.supplier.name.toLowerCase().includes(searchTerm))
     );
 });
+
+// Calculate price for 100g of recipe
+const calculateRecipePrice = computed(() => {
+    let total = 0;
+
+    recipeForm.ingredients.forEach((ingredient) => {
+        const ingredientData = props.allIngredients.find(
+            (i) => i.id === ingredient.id
+        );
+
+        if (ingredientData && ingredientData.price) {
+            // Calculate price contribution: price * concentration(%) * 0.1 (for 100g)
+            const priceContribution =
+                ingredientData.price *
+                (ingredient.pivot.concentration / 100) *
+                0.1;
+            total += priceContribution;
+        }
+    });
+
+    return parseFloat(total.toFixed(2));
+});
+
+// Format currency
+const formatCurrency = (value) => {
+    return new Intl.NumberFormat("ro-RO", {
+        style: "currency",
+        currency: "RON",
+        minimumFractionDigits: 2,
+    }).format(value || 0);
+};
 
 // Open the new recipe modal
 const openNewRecipeModal = () => {
@@ -129,6 +162,7 @@ const openQuickAddIngredient = () => {
     quickAddDialog.value.name = "";
     quickAddDialog.value.description = "";
     quickAddDialog.value.supplier_id = null;
+    quickAddDialog.value.price = 0.0;
     quickAddDialog.value.concentration = 0.0;
     quickAddDialog.value.errors = {};
 };
@@ -157,6 +191,7 @@ const addSelectedIngredient = () => {
         id: ingredientDialog.value.selected.id,
         name: ingredientDialog.value.selected.name,
         supplier: ingredientDialog.value.selected.supplier,
+        price: ingredientDialog.value.selected.price,
         pivot: {
             concentration: ingredientDialog.value.concentration,
         },
@@ -190,6 +225,7 @@ const createAndSelectIngredient = () => {
             name: quickAddDialog.value.name,
             description: quickAddDialog.value.description,
             supplier_id: quickAddDialog.value.supplier_id,
+            price: quickAddDialog.value.price,
         },
         {
             preserveScroll: true,
@@ -202,6 +238,7 @@ const createAndSelectIngredient = () => {
                     id: newIngredient.id,
                     name: newIngredient.name,
                     supplier: newIngredient.supplier,
+                    price: newIngredient.price,
                     pivot: {
                         concentration: quickAddDialog.value.concentration,
                     },
@@ -335,6 +372,11 @@ const confirmDelete = (recipe) => {
                             </div>
                         </template>
                     </Column>
+                    <Column header="Price (per 100g)">
+                        <template #body="{ data }">
+                            {{ formatCurrency(data.price_per_100g) }}
+                        </template>
+                    </Column>
                     <Column header="Actions" style="width: 150px">
                         <template #body="{ data }">
                             <div class="flex gap-2">
@@ -392,6 +434,28 @@ const confirmDelete = (recipe) => {
                         }}</small>
                     </div>
 
+                    <!-- Price Calculation Card -->
+                    <Card class="mb-4 bg-blue-50">
+                        <template #title>
+                            <div class="flex justify-between items-center">
+                                <span>Price Calculation</span>
+                                <span class="text-xl font-bold">{{
+                                    formatCurrency(calculateRecipePrice)
+                                }}</span>
+                            </div>
+                        </template>
+                        <template #subtitle>
+                            <span>Per 100g of recipe</span>
+                        </template>
+                        <template #content>
+                            <p class="text-sm text-gray-600">
+                                This price is calculated based on the cost of
+                                ingredients per kg and their concentration in
+                                the recipe.
+                            </p>
+                        </template>
+                    </Card>
+
                     <div class="mb-4">
                         <div class="flex justify-between items-center mb-2">
                             <label class="font-medium">Ingredients</label>
@@ -419,6 +483,11 @@ const confirmDelete = (recipe) => {
                             responsiveLayout="scroll"
                         >
                             <Column field="name" header="Ingredient"></Column>
+                            <Column field="price" header="Price/kg">
+                                <template #body="{ data }">
+                                    {{ formatCurrency(data.price) }}
+                                </template>
+                            </Column>
                             <Column
                                 field="pivot.concentration"
                                 header="Concentration"
@@ -435,6 +504,18 @@ const confirmDelete = (recipe) => {
                                         :minFractionDigits="1"
                                         :maxFractionDigits="1"
                                     />
+                                </template>
+                            </Column>
+                            <Column header="Cost in Recipe">
+                                <template #body="{ data }">
+                                    {{
+                                        formatCurrency(
+                                            data.price *
+                                                (data.pivot.concentration /
+                                                    100) *
+                                                0.1
+                                        )
+                                    }}
                                 </template>
                             </Column>
                             <Column header="Actions" style="width: 100px">
@@ -480,7 +561,7 @@ const confirmDelete = (recipe) => {
             <Dialog
                 v-model:visible="ingredientDialog.visible"
                 header="Select Ingredient"
-                :style="{ width: '500px' }"
+                :style="{ width: '550px' }"
                 modal
             >
                 <div class="mb-4">
@@ -512,6 +593,11 @@ const confirmDelete = (recipe) => {
                             field="supplier.name"
                             header="Supplier"
                         ></Column>
+                        <Column field="price" header="Price/kg">
+                            <template #body="{ data }">
+                                {{ formatCurrency(data.price) }}
+                            </template>
+                        </Column>
                     </DataTable>
                 </div>
 
@@ -585,6 +671,21 @@ const confirmDelete = (recipe) => {
                         optionLabel="name"
                         optionValue="id"
                         placeholder="Select a supplier (optional)"
+                        class="w-full"
+                    />
+                </div>
+
+                <div class="mb-4">
+                    <label for="quick-price" class="block mb-2"
+                        >Price per kg</label
+                    >
+                    <InputNumber
+                        id="quick-price"
+                        v-model="quickAddDialog.price"
+                        mode="currency"
+                        currency="USD"
+                        :minFractionDigits="2"
+                        :maxFractionDigits="2"
                         class="w-full"
                     />
                 </div>
