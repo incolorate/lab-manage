@@ -16,6 +16,7 @@ import { useToast } from "primevue/usetoast";
 import Select from "primevue/select";
 import InputNumber from "primevue/inputnumber";
 import Checkbox from "primevue/checkbox";
+import ImportIngredients from "@/Components/ImportIngredients.vue";
 
 const showCreateIngredientModal = ref(false);
 const showEditIngredientModal = ref(false);
@@ -153,8 +154,7 @@ defineProps({
             <Button type="submit" @click="showCreateIngredientModal = true"
                 >Add ingredient</Button
             >
-
-            <!-- Create Ingredient Modal -->
+            <ImportIngredients />
             <Dialog
                 v-model:visible="showCreateIngredientModal"
                 modal
@@ -511,87 +511,75 @@ defineProps({
                 </div>
             </Dialog>
         </div>
-        <div class="w-full bg-blue-200 flex justify-center">
-            <div class="w-full max-w-xl">
-                <DataTable
-                    v-if="ingredients.length > 0"
-                    :value="ingredients"
-                    :totalRecords="ingredients.length"
-                    tableStyle="max-width: 50rem"
-                    paginator
-                    :rows="5"
-                    :rowsPerPageOptions="[5, 10, 20, 50]"
-                    :globalFilterFields="['name', 'inci', 'description']"
-                    dataKey="id"
-                    filterDisplay="row"
-                    v-model:filters="filters"
-                >
-                    <template #header>
-                        <div class="flex justify-end">
-                            <IconField>
-                                <InputIcon>
-                                    <i class="pi pi-search" />
-                                </InputIcon>
-                                <InputText
-                                    v-model="filters['global'].value"
-                                    placeholder="Keyword Search"
-                                />
-                            </IconField>
-                        </div>
-                    </template>
-                    <Column field="name" header="Name"></Column>
-                    <Column field="inci" header="INCI"></Column>
-                    <Column field="description" header="Description"></Column>
-                    <Column field="price" header="Price">
-                        <template #body="{ data }">
-                            {{ data.price ? "€" + data.price.toFixed(2) : "-" }}
-                        </template>
-                    </Column>
-                    <Column field="in_stock" header="Stock">
-                        <template #body="{ data }">
-                            <span
-                                v-if="data.in_stock"
-                                class="pi pi-check text-green-500"
-                            ></span>
-                            <span
-                                v-else
-                                class="pi pi-times text-red-500"
-                            ></span>
-                        </template>
-                    </Column>
-                    <Column field="stock_amount" header="Amount">
-                        <template #body="{ data }">
-                            {{
-                                data.stock_amount
-                                    ? data.stock_amount.toFixed(2)
-                                    : "-"
-                            }}
-                        </template>
-                    </Column>
-                    <Column field="supplier.name" header="Supplier"></Column>
+        <DataTable
+            v-if="ingredients.length > 0"
+            :value="ingredients"
+            :totalRecords="ingredients.length"
+            paginator
+            :rows="10"
+            :rowsPerPageOptions="[5, 10, 20, 50]"
+            :globalFilterFields="['name', 'inci', 'description']"
+            dataKey="id"
+            filterDisplay="row"
+            v-model:filters="filters"
+        >
+            <template #header>
+                <div class="flex justify-end">
+                    <IconField>
+                        <InputIcon>
+                            <i class="pi pi-search" />
+                        </InputIcon>
+                        <InputText
+                            v-model="filters['global'].value"
+                            placeholder="Keyword Search"
+                        />
+                    </IconField>
+                </div>
+            </template>
+            <Column field="name" header="Name"></Column>
+            <Column field="inci" header="INCI"></Column>
+            <Column field="description" header="Description"></Column>
+            <Column field="price" header="Price">
+                <template #body="{ data }">
+                    {{ data.price ? data.price : "-" }}
+                </template>
+            </Column>
+            <Column field="in_stock" header="Stock">
+                <template #body="{ data }">
+                    <span
+                        v-if="data.in_stock"
+                        class="pi pi-check text-green-500"
+                    ></span>
+                    <span v-else class="pi pi-times text-red-500"></span>
+                </template>
+            </Column>
+            <Column field="stock_amount" header="Amount">
+                <template #body="{ data }">
+                    {{ data.stock_amount ? data.stock_amount.toFixed(2) : "-" }}
+                </template>
+            </Column>
+            <Column field="supplier.name" header="Supplier"></Column>
 
-                    <Column header="Actions">
-                        <template #body="{ data }">
-                            <div class="flex gap-2">
-                                <Button
-                                    icon="pi pi-pencil"
-                                    @click="openEditModal(data)"
-                                    severity="info"
-                                    rounded
-                                ></Button>
-                                <Button
-                                    icon="pi pi-times"
-                                    @click="deleteIngredient(data.id)"
-                                    severity="danger"
-                                    rounded
-                                ></Button>
-                            </div>
-                        </template>
-                    </Column>
-                </DataTable>
-                <p v-else>No items detected</p>
-            </div>
-        </div>
+            <Column header="Actions">
+                <template #body="{ data }">
+                    <div class="flex gap-2">
+                        <Button
+                            icon="pi pi-pencil"
+                            @click="openEditModal(data)"
+                            severity="info"
+                            rounded
+                        ></Button>
+                        <Button
+                            icon="pi pi-times"
+                            @click="deleteIngredient(data.id)"
+                            severity="danger"
+                            rounded
+                        ></Button>
+                    </div>
+                </template>
+            </Column>
+        </DataTable>
+        <p v-else>No items detected</p>
 
         <Dialog
             v-model:visible="showCreateSupplierModal"
