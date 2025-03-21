@@ -14,20 +14,34 @@ import InputIcon from "primevue/inputicon";
 import Dialog from "primevue/dialog";
 import { useToast } from "primevue/usetoast";
 import Select from "primevue/select";
+import InputNumber from "primevue/inputnumber";
+import Checkbox from "primevue/checkbox";
 
 const showCreateIngredientModal = ref(false);
 const showEditIngredientModal = ref(false);
 const showCreateSupplierModal = ref(false);
 const form = useForm({
     name: null,
+    inci: null,
     description: null,
+    moq: null,
+    price: null,
+    is_sample: false,
+    in_stock: false,
+    stock_amount: null,
     supplier_id: null,
 });
 
 const editForm = useForm({
     id: null,
     name: null,
+    inci: null,
     description: null,
+    moq: null,
+    price: null,
+    is_sample: false,
+    in_stock: false,
+    stock_amount: null,
     supplier_id: null,
 });
 
@@ -85,7 +99,13 @@ function submitEdit() {
 function openEditModal(ingredient) {
     editForm.id = ingredient.id;
     editForm.name = ingredient.name;
+    editForm.inci = ingredient.inci;
     editForm.description = ingredient.description;
+    editForm.moq = ingredient.moq;
+    editForm.price = ingredient.price;
+    editForm.is_sample = ingredient.is_sample;
+    editForm.in_stock = ingredient.in_stock;
+    editForm.stock_amount = ingredient.stock_amount;
     editForm.supplier_id = ingredient.supplier_id;
     showEditIngredientModal.value = true;
 }
@@ -139,7 +159,7 @@ defineProps({
                 v-model:visible="showCreateIngredientModal"
                 modal
                 header="Create ingredient"
-                :style="{ width: '25rem' }"
+                :style="{ width: '35rem' }"
             >
                 <form @submit.prevent="submit" class="flex flex-col gap-4">
                     <div class="flex flex-col gap-1">
@@ -153,6 +173,19 @@ defineProps({
                             {{ form.errors.name }}
                         </small>
                     </div>
+
+                    <div class="flex flex-col gap-1">
+                        <InputText
+                            id="inci"
+                            placeholder="INCI"
+                            v-model="form.inci"
+                            class="bg-white text-slate-950"
+                        />
+                        <small class="text-red-500" v-if="form.errors.inci">
+                            {{ form.errors.inci }}
+                        </small>
+                    </div>
+
                     <div class="flex flex-col gap-1">
                         <InputText
                             id="description"
@@ -160,7 +193,6 @@ defineProps({
                             v-model="form.description"
                             class="bg-white text-slate-950"
                         />
-
                         <small
                             class="text-red-500"
                             v-if="form.errors.description"
@@ -168,6 +200,90 @@ defineProps({
                             {{ form.errors.description }}
                         </small>
                     </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label for="moq">Minimum Order Quantity</label>
+                            <InputNumber
+                                id="moq"
+                                v-model="form.moq"
+                                class="bg-white text-slate-950 w-full"
+                                minFractionDigits="2"
+                                maxFractionDigits="2"
+                            />
+                            <small class="text-red-500" v-if="form.errors.moq">
+                                {{ form.errors.moq }}
+                            </small>
+                        </div>
+
+                        <div class="flex flex-col gap-1">
+                            <label for="price">Price</label>
+                            <InputNumber
+                                id="price"
+                                v-model="form.price"
+                                class="bg-white text-slate-950 w-full"
+                                mode="currency"
+                                currency="EUR"
+                                locale="en-EU"
+                            />
+                            <small
+                                class="text-red-500"
+                                v-if="form.errors.price"
+                            >
+                                {{ form.errors.price }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex items-center gap-2">
+                            <Checkbox
+                                id="is_sample"
+                                v-model="form.is_sample"
+                                :binary="true"
+                            />
+                            <label for="is_sample">Sample</label>
+                            <small
+                                class="text-red-500"
+                                v-if="form.errors.is_sample"
+                            >
+                                {{ form.errors.is_sample }}
+                            </small>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <Checkbox
+                                id="in_stock"
+                                v-model="form.in_stock"
+                                :binary="true"
+                            />
+                            <label for="in_stock">In Stock</label>
+                            <small
+                                class="text-red-500"
+                                v-if="form.errors.in_stock"
+                            >
+                                {{ form.errors.in_stock }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                        <label for="stock_amount">Stock Amount</label>
+                        <InputNumber
+                            id="stock_amount"
+                            v-model="form.stock_amount"
+                            class="bg-white text-slate-950"
+                            minFractionDigits="2"
+                            maxFractionDigits="2"
+                        />
+                        <small
+                            class="text-red-500"
+                            v-if="form.errors.stock_amount"
+                        >
+                            {{ form.errors.stock_amount }}
+                        </small>
+                    </div>
+
                     <div class="flex flex-col gap-1">
                         <Select
                             v-model="form.supplier_id"
@@ -176,7 +292,7 @@ defineProps({
                             optionLabel="name"
                             optionValue="id"
                             placeholder="Select a supplier"
-                            class="w-full md:w-56"
+                            class="w-full"
                         >
                             <template #option="slotProps">
                                 <div>{{ slotProps.option.name }}</div>
@@ -195,8 +311,11 @@ defineProps({
                                 </div>
                             </template>
                         </Select>
-                        <small class="text-red-500" v-if="form.errors.supplier">
-                            {{ form.errors.supplier }}
+                        <small
+                            class="text-red-500"
+                            v-if="form.errors.supplier_id"
+                        >
+                            {{ form.errors.supplier_id }}
                         </small>
                     </div>
                 </form>
@@ -216,7 +335,7 @@ defineProps({
                 v-model:visible="showEditIngredientModal"
                 modal
                 header="Edit ingredient"
-                :style="{ width: '25rem' }"
+                :style="{ width: '35rem' }"
             >
                 <form @submit.prevent="submitEdit" class="flex flex-col gap-4">
                     <div class="flex flex-col gap-1">
@@ -230,6 +349,19 @@ defineProps({
                             {{ editForm.errors.name }}
                         </small>
                     </div>
+
+                    <div class="flex flex-col gap-1">
+                        <InputText
+                            id="edit-inci"
+                            placeholder="INCI"
+                            v-model="editForm.inci"
+                            class="bg-white text-slate-950"
+                        />
+                        <small class="text-red-500" v-if="editForm.errors.inci">
+                            {{ editForm.errors.inci }}
+                        </small>
+                    </div>
+
                     <div class="flex flex-col gap-1">
                         <InputText
                             id="edit-description"
@@ -237,7 +369,6 @@ defineProps({
                             v-model="editForm.description"
                             class="bg-white text-slate-950"
                         />
-
                         <small
                             class="text-red-500"
                             v-if="editForm.errors.description"
@@ -245,6 +376,91 @@ defineProps({
                             {{ editForm.errors.description }}
                         </small>
                     </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label for="edit-moq">Minimum Order Quantity</label>
+                            <InputNumber
+                                id="edit-moq"
+                                v-model="editForm.moq"
+                                class="bg-white text-slate-950 w-full"
+                                minFractionDigits="2"
+                                maxFractionDigits="2"
+                            />
+                            <small
+                                class="text-red-500"
+                                v-if="editForm.errors.moq"
+                            >
+                                {{ editForm.errors.moq }}
+                            </small>
+                        </div>
+
+                        <div class="flex flex-col gap-1">
+                            <label for="edit-price">Price (RON)</label>
+                            <InputNumber
+                                id="edit-price"
+                                v-model="editForm.price"
+                                class="bg-white text-slate-950 w-full"
+                            />
+
+                            <small
+                                class="text-red-500"
+                                v-if="editForm.errors.price"
+                            >
+                                {{ editForm.errors.price }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex items-center gap-2">
+                            <Checkbox
+                                id="edit-is_sample"
+                                v-model="editForm.is_sample"
+                                :binary="true"
+                            />
+                            <label for="edit-is_sample">Sample</label>
+                            <small
+                                class="text-red-500"
+                                v-if="editForm.errors.is_sample"
+                            >
+                                {{ editForm.errors.is_sample }}
+                            </small>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <Checkbox
+                                id="edit-in_stock"
+                                v-model="editForm.in_stock"
+                                :binary="true"
+                            />
+                            <label for="edit-in_stock">In Stock</label>
+                            <small
+                                class="text-red-500"
+                                v-if="editForm.errors.in_stock"
+                            >
+                                {{ editForm.errors.in_stock }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                        <label for="edit-stock_amount">Stock Amount</label>
+                        <InputNumber
+                            id="edit-stock_amount"
+                            v-model="editForm.stock_amount"
+                            class="bg-white text-slate-950"
+                            minFractionDigits="2"
+                            maxFractionDigits="2"
+                        />
+                        <small
+                            class="text-red-500"
+                            v-if="editForm.errors.stock_amount"
+                        >
+                            {{ editForm.errors.stock_amount }}
+                        </small>
+                    </div>
+
                     <div class="flex flex-col gap-1">
                         <Select
                             v-model="editForm.supplier_id"
@@ -253,7 +469,7 @@ defineProps({
                             optionLabel="name"
                             optionValue="id"
                             placeholder="Select a supplier"
-                            class="w-full md:w-56"
+                            class="w-full"
                         >
                             <template #option="slotProps">
                                 <div>{{ slotProps.option.name }}</div>
@@ -274,9 +490,9 @@ defineProps({
                         </Select>
                         <small
                             class="text-red-500"
-                            v-if="editForm.errors.supplier"
+                            v-if="editForm.errors.supplier_id"
                         >
-                            {{ editForm.errors.supplier }}
+                            {{ editForm.errors.supplier_id }}
                         </small>
                     </div>
                 </form>
@@ -305,7 +521,7 @@ defineProps({
                     paginator
                     :rows="5"
                     :rowsPerPageOptions="[5, 10, 20, 50]"
-                    :globalFilterFields="['name', 'description']"
+                    :globalFilterFields="['name', 'inci', 'description']"
                     dataKey="id"
                     filterDisplay="row"
                     v-model:filters="filters"
@@ -323,9 +539,36 @@ defineProps({
                             </IconField>
                         </div>
                     </template>
-                    <Column field="name" header="Name"> </Column>
-                    <Column field="description" header="Description"> </Column>
-                    <Column field="supplier.name" header="Supplier"> </Column>
+                    <Column field="name" header="Name"></Column>
+                    <Column field="inci" header="INCI"></Column>
+                    <Column field="description" header="Description"></Column>
+                    <Column field="price" header="Price">
+                        <template #body="{ data }">
+                            {{ data.price ? "€" + data.price.toFixed(2) : "-" }}
+                        </template>
+                    </Column>
+                    <Column field="in_stock" header="Stock">
+                        <template #body="{ data }">
+                            <span
+                                v-if="data.in_stock"
+                                class="pi pi-check text-green-500"
+                            ></span>
+                            <span
+                                v-else
+                                class="pi pi-times text-red-500"
+                            ></span>
+                        </template>
+                    </Column>
+                    <Column field="stock_amount" header="Amount">
+                        <template #body="{ data }">
+                            {{
+                                data.stock_amount
+                                    ? data.stock_amount.toFixed(2)
+                                    : "-"
+                            }}
+                        </template>
+                    </Column>
+                    <Column field="supplier.name" header="Supplier"></Column>
 
                     <Column header="Actions">
                         <template #body="{ data }">

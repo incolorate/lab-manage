@@ -37,16 +37,20 @@ class IngredientController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'inci' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:500',
+            'moq' => 'nullable|numeric|min:0',
+            'price' => 'nullable|numeric|min:0',
+            'is_sample' => 'boolean',
+            'in_stock' => 'boolean',
+            'stock_amount' => 'nullable|numeric|min:0',
             'supplier_id' => 'nullable|exists:suppliers,id'
         ]);
-
+    
         Ingredient::create($validated);
-
-
+    
         return to_route('ingredients.index');
     }
-
     /**
      * Display the specified resource.
      */
