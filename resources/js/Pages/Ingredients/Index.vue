@@ -146,15 +146,19 @@ defineProps({
     <Head title="Ingredients" />
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                Ingredients
-            </h2>
+            <div class="flex justify-between">
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                    Ingredients
+                </h2>
+                <div class="space-x-4">
+                    <Button type="submit" @click="showCreateIngredientModal = true"
+                    >Add ingredient</Button
+                    >
+                    <ImportIngredients />
+                </div>
+            </div>
         </template>
         <div class="bg-slate-50 text-slate-950 mx-auto w-full p-8">
-            <Button type="submit" @click="showCreateIngredientModal = true"
-                >Add ingredient</Button
-            >
-            <ImportIngredients />
             <Dialog
                 v-model:visible="showCreateIngredientModal"
                 modal
@@ -548,6 +552,15 @@ defineProps({
                 <template #body="{ data }">
                     <span
                         v-if="data.in_stock"
+                        class="pi pi-check text-green-500"
+                    ></span>
+                    <span v-else class="pi pi-times text-red-500"></span>
+                </template>
+            </Column>
+            <Column field="is_sample" header="Sample">
+                <template #body="{ data }">
+                    <span
+                        v-if="data.is_sample"
                         class="pi pi-check text-green-500"
                     ></span>
                     <span v-else class="pi pi-times text-red-500"></span>

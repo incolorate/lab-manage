@@ -67,13 +67,26 @@ class IngredientController extends Controller
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'inci' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:500',
+            'moq' => 'nullable|numeric|min:0',
+            'price' => 'nullable|numeric|min:0',
+            'is_sample' => 'boolean',
+            'in_stock' => 'boolean',
+            'stock_amount' => 'nullable|numeric|min:0',
+            'supplier_id' => 'nullable|exists:suppliers,id'
+        ]);
+
+        $ingredient = Ingredient::findOrFail($id);
+        $ingredient->update($validated);
+
+        return to_route('ingredients.index')->with('message', 'Ingredient updated successfully');
     }
+
 
     /**
      * Remove the specified resource from storage.
