@@ -330,18 +330,21 @@ const confirmDelete = (recipe) => {
 
 <template>
     <AuthenticatedLayout>
+        <template #header>
+
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-2xl font-bold">Recipes</h1>
+                <Button
+                    label="New Recipe"
+                    icon="pi pi-plus"
+                    @click="openNewRecipeModal"
+                />
+            </div>
+        </template>
         <div class="p-4">
             <Toast />
 
             <div class="card">
-                <div class="flex justify-between items-center mb-4">
-                    <h1 class="text-2xl font-bold">Recipes</h1>
-                    <Button
-                        label="New Recipe"
-                        icon="pi pi-plus"
-                        @click="openNewRecipeModal"
-                    />
-                </div>
 
                 <!-- Recipes DataTable -->
                 <DataTable
