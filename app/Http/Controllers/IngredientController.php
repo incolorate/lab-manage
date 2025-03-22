@@ -99,4 +99,39 @@ class IngredientController extends Controller
         return to_route('ingredients.index')
             ->with('message', 'Ingredient deleted successfully');
     }
+
+        /**
+     * Quickly create a new ingredient and return it for recipe usage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Inertia\Response
+     */
+    public function quickAdd(Request $request)
+    {
+        // Validate the incoming request
+        $validator =$request->validate([
+            'name' => 'required|string|max:255|unique:ingredients,name',
+            'description' => 'nullable|string',
+            'supplier_id' => 'nullable|exists:suppliers,id',
+            'price' => 'nullable|numeric|min:0',
+        ]);
+        
+    
+        // Create the new ingredient
+        $ingredient = Ingredient::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'supplier_id' => $request->supplier_id,
+            'price' => $request->price,
+        ]);
+        
+        if ($ingredient->supplier_id) {
+            $ingredient->load('supplier');
+        }
+        
+        return Inertia::render('Recipes/Index', [
+            'newIngredient' => $ingredient,
+            'message' => 'Ingredient created successfully',
+        ]);
+    }
 }

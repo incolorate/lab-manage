@@ -4,22 +4,16 @@ import { useForm, router } from "@inertiajs/vue3";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-
-// PrimeVue Components
+import RecipeModal from "@/Components/Recipes/RecipeModal.vue";
+import IngredientSelectorModal from "@/Components/Recipes/IngredientSelectorModal.vue";
+import QuickAddIngredientModal from "@/Components/Recipes/QuickAddIngredientModal.vue";
 import Button from "primevue/button";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
-import Dialog from "primevue/dialog";
-import InputText from "primevue/inputtext";
-import Textarea from "primevue/textarea";
-import InputNumber from "primevue/inputnumber";
-import Dropdown from "primevue/dropdown";
 import Chip from "primevue/chip";
 import Toast from "primevue/toast";
 import ConfirmDialog from "primevue/confirmdialog";
-import Card from "primevue/card";
 
-// Props
 const props = defineProps({
     recipes: {
         type: Array,
@@ -33,13 +27,8 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
-    errors: {
-        type: Object,
-        default: () => ({}),
-    },
 });
 
-// Services
 const toast = useToast();
 const confirm = useConfirm();
 
@@ -77,6 +66,14 @@ const quickAddDialog = ref({
     errors: {},
 });
 
+const formatCurrency = (value) => {
+    return new Intl.NumberFormat("ro-RO", {
+        style: "currency",
+        currency: "RON",
+        minimumFractionDigits: 2,
+    }).format(value || 0);
+};
+
 // Filtered ingredients based on search term
 const filteredIngredients = computed(() => {
     if (!ingredientDialog.value.search) return props.allIngredients;
@@ -112,15 +109,6 @@ const calculateRecipePrice = computed(() => {
     return parseFloat(total.toFixed(2));
 });
 
-// Format currency
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat("ro-RO", {
-        style: "currency",
-        currency: "RON",
-        minimumFractionDigits: 2,
-    }).format(value || 0);
-};
-
 // Open the new recipe modal
 const openNewRecipeModal = () => {
     recipeDialog.value.isEdit = false;
@@ -139,13 +127,6 @@ const editRecipe = (recipe) => {
     recipeForm.ingredients = JSON.parse(JSON.stringify(recipe.ingredients));
 
     recipeDialog.value.visible = true;
-};
-
-// Reset the recipe form
-const resetRecipeForm = () => {
-    recipeForm.reset();
-    recipeDialog.value.isEdit = false;
-    recipeDialog.value.editId = null;
 };
 
 // Open the ingredient selector dialog
@@ -228,7 +209,10 @@ const createAndSelectIngredient = () => {
             price: quickAddDialog.value.price,
         },
         {
+            preserveState: true,
             preserveScroll: true,
+            preserveUrl: true,
+            only: ["newIngredient"],
             onSuccess: (page) => {
                 // Get the newly created ingredient from the response
                 const newIngredient = page.props.newIngredient;
@@ -244,6 +228,12 @@ const createAndSelectIngredient = () => {
                     },
                 });
 
+                props.allIngredients.push({
+                    id: newIngredient.id,
+                    name: newIngredient.name,
+                    supplier: newIngredient.supplier,
+                    price: newIngredient.price,
+                });
                 toast.add({
                     severity: "success",
                     summary: "Success",
@@ -264,33 +254,25 @@ const createAndSelectIngredient = () => {
 };
 
 // Remove ingredient from recipe
-const removeIngredient = (index) => {
-    recipeForm.ingredients.splice(index, 1);
-};
 
 // Save the recipe (create or update)
 const saveRecipe = () => {
     if (recipeDialog.value.isEdit) {
         // Update existing recipe
-        router.put(
-            route("recipes.update", recipeDialog.value.editId),
-            recipeForm,
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    recipeDialog.value.visible = false;
-                    toast.add({
-                        severity: "success",
-                        summary: "Recipe Updated",
-                        detail: "Recipe has been updated successfully",
-                        life: 3000,
-                    });
-                },
-            }
-        );
+        recipeForm.put(route("recipes.update", recipeDialog.value.editId), {
+            preserveScroll: true,
+            onSuccess: () => {
+                recipeDialog.value.visible = false;
+                toast.add({
+                    severity: "success",
+                    summary: "Recipe Updated",
+                    detail: "Recipe has been updated successfully",
+                    life: 3000,
+                });
+            },
+        });
     } else {
-        // Create new recipe
-        router.post(route("recipes.store"), recipeForm, {
+        recipeForm.post(route("recipes.store"), {
             preserveScroll: true,
             onSuccess: () => {
                 recipeDialog.value.visible = false;
@@ -329,11 +311,13 @@ const confirmDelete = (recipe) => {
 </script>
 
 <template>
+    <Head title="Recipes" />
     <AuthenticatedLayout>
         <template #header>
-
             <div class="flex justify-between items-center mb-4">
-                <h1 class="text-2xl font-bold">Recipes</h1>
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                    Recipes
+                </h2>
                 <Button
                     label="New Recipe"
                     icon="pi pi-plus"
@@ -345,8 +329,6 @@ const confirmDelete = (recipe) => {
             <Toast />
 
             <div class="card">
-
-                <!-- Recipes DataTable -->
                 <DataTable
                     :value="recipes"
                     :paginator="true"
@@ -399,331 +381,29 @@ const confirmDelete = (recipe) => {
                 </DataTable>
             </div>
 
-            <!-- Recipe Dialog (Create/Edit) -->
-            <Dialog
-                v-model:visible="recipeDialog.visible"
-                :header="recipeDialog.isEdit ? 'Edit Recipe' : 'New Recipe'"
-                :style="{ width: '650px' }"
-                modal
-                @hide="resetRecipeForm"
-            >
-                <form @submit.prevent="saveRecipe">
-                    <div class="mb-4">
-                        <label for="name" class="block mb-2">Recipe Name</label>
-                        <InputText
-                            id="name"
-                            v-model="recipeForm.name"
-                            class="w-full"
-                            :class="{ 'p-invalid': errors.name }"
-                        />
-                        <small v-if="errors.name" class="p-error">{{
-                            errors.name
-                        }}</small>
-                    </div>
+            <RecipeModal
+                v-model:recipe-dialog="recipeDialog"
+                v-model:recipe-form="recipeForm"
+                :save-recipe="saveRecipe"
+                :open-ingredient-selector="openIngredientSelector"
+                :open-quick-add-ingredient="openQuickAddIngredient"
+                :calculate-recipe-price="calculateRecipePrice"
+            />
 
-                    <div class="mb-4">
-                        <label for="description" class="block mb-2"
-                            >Description</label
-                        >
-                        <Textarea
-                            id="description"
-                            v-model="recipeForm.description"
-                            rows="3"
-                            class="w-full"
-                            :class="{ 'p-invalid': errors.description }"
-                        />
-                        <small v-if="errors.description" class="p-error">{{
-                            errors.description
-                        }}</small>
-                    </div>
+            <IngredientSelectorModal
+                v-model:ingredient-dialog="ingredientDialog"
+                :filtered-ingredients="filteredIngredients"
+                :add-selected-ingredient="addSelectedIngredient"
+            />
 
-                    <!-- Price Calculation Card -->
-                    <Card class="mb-4 bg-blue-50">
-                        <template #title>
-                            <div class="flex justify-between items-center">
-                                <span>Price Calculation</span>
-                                <span class="text-xl font-bold">{{
-                                    formatCurrency(calculateRecipePrice)
-                                }}</span>
-                            </div>
-                        </template>
-                        <template #subtitle>
-                            <span>Per 100g of recipe</span>
-                        </template>
-                        <template #content>
-                            <p class="text-sm text-gray-600">
-                                This price is calculated based on the cost of
-                                ingredients per kg and their concentration in
-                                the recipe.
-                            </p>
-                        </template>
-                    </Card>
-
-                    <div class="mb-4">
-                        <div class="flex justify-between items-center mb-2">
-                            <label class="font-medium">Ingredients</label>
-                            <div class="flex gap-2">
-                                <Button
-                                    type="button"
-                                    label="Select Ingredient"
-                                    icon="pi pi-plus"
-                                    size="small"
-                                    @click="openIngredientSelector"
-                                />
-                                <Button
-                                    type="button"
-                                    label="Quick Add"
-                                    icon="pi pi-bolt"
-                                    class="p-button-secondary"
-                                    size="small"
-                                    @click="openQuickAddIngredient"
-                                />
-                            </div>
-                        </div>
-
-                        <DataTable
-                            :value="recipeForm.ingredients"
-                            responsiveLayout="scroll"
-                        >
-                            <Column field="name" header="Ingredient"></Column>
-                            <Column field="price" header="Price/kg">
-                                <template #body="{ data }">
-                                    {{ formatCurrency(data.price) }}
-                                </template>
-                            </Column>
-                            <Column
-                                field="pivot.concentration"
-                                header="Concentration"
-                            >
-                                <template #body="{ data, index }">
-                                    <InputNumber
-                                        v-model="
-                                            recipeForm.ingredients[index].pivot
-                                                .concentration
-                                        "
-                                        suffix=" %"
-                                        :min="0"
-                                        :max="100"
-                                        :minFractionDigits="1"
-                                        :maxFractionDigits="1"
-                                    />
-                                </template>
-                            </Column>
-                            <Column header="Cost in Recipe">
-                                <template #body="{ data }">
-                                    {{
-                                        formatCurrency(
-                                            data.price *
-                                                (data.pivot.concentration /
-                                                    100) *
-                                                0.1
-                                        )
-                                    }}
-                                </template>
-                            </Column>
-                            <Column header="Actions" style="width: 100px">
-                                <template #body="{ index }">
-                                    <Button
-                                        icon="pi pi-trash"
-                                        class="p-button-danger p-button-sm"
-                                        @click="removeIngredient(index)"
-                                    />
-                                </template>
-                            </Column>
-                        </DataTable>
-                        <small v-if="errors.ingredients" class="p-error">{{
-                            errors.ingredients
-                        }}</small>
-                        <small
-                            v-if="recipeForm.ingredients.length === 0"
-                            class="block mt-2 text-gray-500"
-                        >
-                            No ingredients added yet. Add at least one
-                            ingredient.
-                        </small>
-                    </div>
-
-                    <div class="flex justify-end mt-4">
-                        <Button
-                            type="button"
-                            label="Cancel"
-                            class="p-button-secondary mr-2"
-                            @click="recipeDialog.visible = false"
-                        />
-                        <Button
-                            type="submit"
-                            label="Save"
-                            icon="pi pi-save"
-                            :loading="recipeForm.processing"
-                        />
-                    </div>
-                </form>
-            </Dialog>
-
+            <QuickAddIngredientModal
+                v-model:quick-add-dialog="quickAddDialog"
+                :suppliers="suppliers"
+                :create-and-select-ingredient="createAndSelectIngredient"
+            />
             <!-- Ingredient Selector Dialog -->
-            <Dialog
-                v-model:visible="ingredientDialog.visible"
-                header="Select Ingredient"
-                :style="{ width: '550px' }"
-                modal
-            >
-                <div class="mb-4">
-                    <span class="p-input-icon-left w-full">
-                        <i class="pi pi-search" />
-                        <InputText
-                            v-model="ingredientDialog.search"
-                            placeholder="Search ingredients..."
-                            class="w-full"
-                        />
-                    </span>
-                </div>
-
-                <div class="mb-4 max-h-64 overflow-y-auto">
-                    <DataTable
-                        :value="filteredIngredients"
-                        v-model:selection="ingredientDialog.selected"
-                        selectionMode="single"
-                        class="p-datatable-sm"
-                        :rows="10"
-                        :scrollable="true"
-                    >
-                        <Column
-                            selectionMode="single"
-                            style="width: 50px"
-                        ></Column>
-                        <Column field="name" header="Name"></Column>
-                        <Column
-                            field="supplier.name"
-                            header="Supplier"
-                        ></Column>
-                        <Column field="price" header="Price/kg">
-                            <template #body="{ data }">
-                                {{ formatCurrency(data.price) }}
-                            </template>
-                        </Column>
-                    </DataTable>
-                </div>
-
-                <div class="mb-4">
-                    <label for="ing-concentration" class="block mb-2"
-                        >Concentration (%)</label
-                    >
-                    <InputNumber
-                        id="ing-concentration"
-                        v-model="ingredientDialog.concentration"
-                        suffix=" %"
-                        :min="0"
-                        :max="100"
-                        :minFractionDigits="1"
-                        :maxFractionDigits="1"
-                        class="w-full"
-                    />
-                </div>
-
-                <div class="flex justify-end">
-                    <Button
-                        label="Add to Recipe"
-                        @click="addSelectedIngredient"
-                        :disabled="!ingredientDialog.selected"
-                    />
-                </div>
-            </Dialog>
 
             <!-- Quick Add Ingredient Dialog -->
-            <Dialog
-                v-model:visible="quickAddDialog.visible"
-                header="Quick Add Ingredient"
-                :style="{ width: '450px' }"
-                modal
-            >
-                <div class="mb-4">
-                    <label for="quick-name" class="block mb-2"
-                        >Ingredient Name</label
-                    >
-                    <InputText
-                        id="quick-name"
-                        v-model="quickAddDialog.name"
-                        class="w-full"
-                        :class="{ 'p-invalid': quickAddDialog.errors.name }"
-                    />
-                    <small v-if="quickAddDialog.errors.name" class="p-error">{{
-                        quickAddDialog.errors.name
-                    }}</small>
-                </div>
-
-                <div class="mb-4">
-                    <label for="quick-description" class="block mb-2"
-                        >Description</label
-                    >
-                    <Textarea
-                        id="quick-description"
-                        v-model="quickAddDialog.description"
-                        rows="2"
-                        class="w-full"
-                    />
-                </div>
-
-                <div class="mb-4">
-                    <label for="quick-supplier" class="block mb-2"
-                        >Supplier</label
-                    >
-                    <Dropdown
-                        id="quick-supplier"
-                        v-model="quickAddDialog.supplier_id"
-                        :options="suppliers"
-                        optionLabel="name"
-                        optionValue="id"
-                        placeholder="Select a supplier (optional)"
-                        class="w-full"
-                    />
-                </div>
-
-                <div class="mb-4">
-                    <label for="quick-price" class="block mb-2"
-                        >Price per kg</label
-                    >
-                    <InputNumber
-                        id="quick-price"
-                        v-model="quickAddDialog.price"
-                        mode="currency"
-                        currency="USD"
-                        :minFractionDigits="2"
-                        :maxFractionDigits="2"
-                        class="w-full"
-                    />
-                </div>
-
-                <div class="mb-4">
-                    <label for="quick-concentration" class="block mb-2"
-                        >Concentration in Recipe (%)</label
-                    >
-                    <InputNumber
-                        id="quick-concentration"
-                        v-model="quickAddDialog.concentration"
-                        suffix=" %"
-                        :min="0"
-                        :max="100"
-                        :minFractionDigits="1"
-                        :maxFractionDigits="1"
-                        class="w-full"
-                    />
-                </div>
-
-                <div class="flex justify-end">
-                    <Button
-                        type="button"
-                        label="Cancel"
-                        class="p-button-secondary mr-2"
-                        @click="quickAddDialog.visible = false"
-                    />
-                    <Button
-                        label="Add & Select"
-                        @click="createAndSelectIngredient"
-                        :disabled="!quickAddDialog.name"
-                        :loading="quickAddDialog.processing"
-                    />
-                </div>
-            </Dialog>
 
             <!-- Delete Confirmation Dialog -->
             <ConfirmDialog />
